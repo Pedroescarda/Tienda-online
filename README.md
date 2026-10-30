@@ -17,7 +17,7 @@ Esta primera versión se ejecuta en consola, pero la arquitectura (modelos + ser
 ## Estructura
 
 ```
-Tienda_online/
+src/
 ├── models/
 │   ├── __init__.py
 │   ├── Producto.py     # Producto, ProductoElectronico, ProductoRopa
@@ -34,8 +34,7 @@ Tienda_online/
 Requiere Python 3.10 o superior (sin dependencias externas).
 
 ```bash
-cd Tienda_online
-python main.py
+python src/main.py
 ```
 
 ## Ejecución con Docker

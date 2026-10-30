@@ -8,7 +8,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 WORKDIR /app
 
 # Copia el código de la aplicación
-COPY Tienda_online/ /app/
+COPY src/ /app/
 
 # Ejecuta la aplicación con un usuario sin privilegios
 RUN useradd --create-home appuser
