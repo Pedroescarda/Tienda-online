@@ -1,3 +1,5 @@
+import os
+
 from models.Producto import ProductoElectronico, ProductoRopa
 from Services.Tienda_service import TiendaService
 
@@ -10,6 +12,9 @@ def mostrar_productos(tienda: TiendaService) -> None:
 
 def main() -> None:
     """Punto de entrada para probar la tienda online."""
+    nombre_tienda = os.getenv("TIENDA_NOMBRE", "Tienda Online")
+    print(f"##### {nombre_tienda} #####\n")
+
     tienda = TiendaService()
 
     ana = tienda.registrar_usuario("cliente", "Ana López", "ana@email.com", "Calle Mayor 1, Madrid")
