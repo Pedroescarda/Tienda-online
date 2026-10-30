@@ -38,6 +38,13 @@ cd Tienda_online
 python main.py
 ```
 
+## Ejecución con Docker
+
+```bash
+docker build -t tienda-online .
+docker run --rm tienda-online
+```
+
 ## Flujo de trabajo con Git
 
 - `main`: rama principal y estable.
