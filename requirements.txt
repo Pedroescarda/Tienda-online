@@ -1,0 +1,4 @@
+# Dependencias de ejecución de la aplicación (versiones fijadas).
+# La aplicación solo usa la biblioteca estándar de Python 3.12,
+# por lo que no necesita paquetes externos en producción.
+# Generado con: pip freeze > requirements.txt
