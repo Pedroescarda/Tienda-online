@@ -23,6 +23,15 @@ class TiendaService:
         self.usuarios[usuario.id] = usuario
         return usuario
 
+    def obtener_usuario(self, usuario_id: str) -> Usuario | None:
+        return self.usuarios.get(usuario_id)
+
+    def listar_usuarios(self) -> list[Usuario]:
+        return list(self.usuarios.values())
+
+    def obtener_producto(self, producto_id: str) -> Producto | None:
+        return self.productos.get(producto_id)
+
     def anadir_producto(self, producto: Producto) -> Producto:
         """Añade un producto al inventario."""
         self.productos[producto.id] = producto
