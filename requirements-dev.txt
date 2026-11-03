@@ -1,3 +1,4 @@
 # Dependencias de desarrollo y pruebas (no se instalan en la imagen Docker)
 -r requirements.txt
-pytest==8.3.3
+pytest==8.3.5
+httpx==0.28.1
