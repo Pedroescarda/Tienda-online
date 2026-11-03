@@ -5,14 +5,14 @@
 
 ## Descripción
 
-Aplicación Python que modela los elementos básicos de una tienda online: **productos**, **usuarios** y **pedidos**. Está diseñada con programación orientada a objetos y una capa de servicios (`TiendaService`) que centraliza las operaciones de la tienda:
+API REST en Python (FastAPI) de una tienda online, desarrollada en la Práctica 2 a partir del modelo orientado a objetos de la Práctica 1.3. Gestiona **productos**, **usuarios** y **pedidos** mediante una capa de servicios (`TiendaService`):
 
-- Registrar usuarios (clientes y administradores).
-- Añadir, eliminar y listar productos del inventario (electrónica y ropa).
+- Registrar usuarios (clientes y administradores) y consultarlos.
+- Crear, listar, consultar y eliminar productos (genéricos, electrónica y ropa).
 - Realizar pedidos comprobando que el cliente existe y que hay stock suficiente.
-- Consultar el histórico de pedidos de un cliente ordenado por fecha.
+- Consultar el histórico de pedidos de un cliente.
 
-La aplicación se ejecuta en consola y está contenerizada con Docker.
+Los datos se guardan en memoria y al arrancar se cargan unos productos y un cliente de ejemplo. La aplicación está contenerizada con Docker.
 
 ## Estructura
 
@@ -25,24 +25,28 @@ La aplicación se ejecuta en consola y está contenerizada con Docker.
 │   │   └── Pedido.py          # Pedido
 │   ├── Services/
 │   │   └── Tienda_service.py  # TiendaService
-│   └── main.py                # Punto de entrada
-├── tests/                     # Pruebas unitarias (pytest)
+│   ├── schemas.py             # Modelos Pydantic de entrada y salida
+│   └── main.py                # API FastAPI (punto de entrada)
+├── tests/                     # Pruebas unitarias y de la API (pytest)
 ├── Dockerfile
 ├── .dockerignore
 ├── requirements.txt           # Dependencias de ejecución (versiones fijadas)
-└── requirements-dev.txt       # Dependencias de desarrollo (pytest)
+└── requirements-dev.txt       # Dependencias de desarrollo (pytest, httpx)
 ```
 
-## Ejecución en local
+## Ejecución en local (sin Docker)
 
-Requiere Python 3.10 o superior. La aplicación solo usa la biblioteca estándar.
+Requiere Python 3.10 o superior.
 
 ```bash
 pip install -r requirements.txt
-python src/main.py
+cd src
+python main.py
 ```
 
-Pruebas unitarias:
+La API queda en http://localhost:8000 y la documentación interactiva en http://localhost:8000/docs.
+
+Pruebas:
 
 ```bash
 pip install -r requirements-dev.txt
@@ -60,64 +64,65 @@ docker build -t tienda-online:1.0.0 -t tienda-online:latest .
 ### Ejecutar el contenedor
 
 ```bash
-# Ejecución básica (el contenedor se elimina al terminar)
-docker run --rm tienda-online:1.0.0
+# Ejecución básica: publica el puerto 8000 del contenedor en el 8000 del equipo
+docker run --rm -p 8000:8000 tienda-online:1.0.0
 
-# Con un nombre de tienda personalizado
-docker run --rm -e TIENDA_NOMBRE="Tienda de Pedro" tienda-online:1.0.0
+# En segundo plano, con nombre y un nombre de tienda personalizado
+docker run -d --name tienda -p 8000:8000 -e TIENDA_NOMBRE="Tienda de Pedro" tienda-online:1.0.0
+docker logs tienda      # ver las peticiones recibidas
+docker stop tienda && docker rm tienda
 
-# Con nombre de contenedor, para consultar después sus logs
-docker run --name tienda tienda-online:1.0.0
-docker logs tienda
-docker rm tienda
+# En otro puerto del equipo (por ejemplo, 8080)
+docker run --rm -p 8080:8000 tienda-online:1.0.0
 ```
 
 ### Variables de entorno
 
-| Variable        | Descripción                                    | Valor por defecto |
-|-----------------|------------------------------------------------|-------------------|
-| `TIENDA_NOMBRE` | Nombre de la tienda mostrado en la cabecera    | `Tienda Online`   |
+| Variable        | Descripción                                               | Valor por defecto |
+|-----------------|-----------------------------------------------------------|-------------------|
+| `TIENDA_NOMBRE` | Nombre de la tienda (se devuelve en `GET /` y en `/docs`) | `Tienda Online`   |
 
 ### Salida esperada
 
-El contenedor ejecuta `src/main.py`, imprime la simulación completa y termina con código 0. Los identificadores y las fechas cambian en cada ejecución:
+Al arrancar, el contenedor muestra el log de uvicorn:
 
 ```
-##### Tienda Online #####
-
-=== USUARIOS ===
-  [1a2b3c4d] Ana López <ana@email.com> | Cliente | Dirección: Calle Mayor 1, Madrid | is_admin: False
-  ...
-  [9f8e7d6c] Admin <admin@tienda.com> | Administrador | is_admin: True
-
-=== INVENTARIO INICIAL ===
-  [....] Portátil - 899.99 € (stock: 10) | Garantía: 24 meses
-  ...
-
-=== PEDIDOS ===
-Pedido [....] - 30/10/2026 18:30:00
-   Cliente: Ana López
-   - Portátil x1 = 899.99 €
-   - Auriculares x2 = 119.80 €
-   Total: 1019.79 €
-...
-
-=== PRUEBAS DE ERRORES ===
-  Error: Stock insuficiente de 'Portátil' (disponible: 9)
-  Error: El usuario id-inexistente no existe
-  Error: El usuario Admin no es un cliente
-...
-=== ELIMINAR PRODUCTO ===
-  Eliminado 'Pantalón vaquero': True
+INFO:     Started server process [1]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:8000 (Press CTRL+C to quit)
 ```
+
+### Endpoints para probar
+
+| Método y ruta                    | Descripción                          | Respuesta |
+|----------------------------------|--------------------------------------|-----------|
+| `GET /`                          | Estado de la API                     | 200 `{"tienda": "Tienda Online", "estado": "ok", "docs": "/docs"}` |
+| `GET /docs`                      | Documentación interactiva (Swagger)  | 200 |
+| `GET /productos`                 | Lista de productos                   | 200 + 3 productos de ejemplo |
+| `POST /productos`                | Crear producto                       | 201 |
+| `GET /usuarios`                  | Lista de usuarios                    | 200 + cliente de ejemplo |
+| `POST /usuarios`                 | Crear usuario                        | 201 (409 si el email ya existe) |
+| `POST /pedidos`                  | Crear pedido                         | 201 (409 si no hay stock) |
+| `GET /usuarios/{id}/pedidos`     | Pedidos de un cliente                | 200 |
+| `DELETE /productos/{id}`         | Eliminar producto                    | 204 |
 
 ### Pasos de prueba
 
-1. `docker build -t tienda-online:1.0.0 .` termina sin errores.
-2. `docker run --rm tienda-online:1.0.0` muestra las secciones USUARIOS, INVENTARIO, PEDIDOS, PRUEBAS DE ERRORES, HISTÓRICO y ELIMINAR PRODUCTO.
-3. `docker run --rm -e TIENDA_NOMBRE="Prueba" tienda-online:1.0.0` muestra `##### Prueba #####` en la primera línea.
-4. `docker run --rm tienda-online:1.0.0 whoami` devuelve `appuser`: el contenedor no se ejecuta como root.
-5. `docker images tienda-online` muestra una imagen ligera (basada en `python:3.12-slim`).
+Con el contenedor en marcha (`docker run --rm -p 8000:8000 tienda-online:1.0.0`):
+
+1. Abrir http://localhost:8000/docs en el navegador: aparece Swagger con todos los endpoints.
+2. `curl http://localhost:8000/` devuelve `"estado": "ok"`.
+3. `curl http://localhost:8000/productos` devuelve los 3 productos de ejemplo.
+4. Crear un pedido (sustituye los ids por los de `GET /usuarios` y `GET /productos`):
+   ```bash
+   curl -X POST http://localhost:8000/pedidos -H "Content-Type: application/json" \
+        -d '{"cliente_id": "<id-cliente>", "items": [{"producto_id": "<id-producto>", "cantidad": 1}]}'
+   ```
+   Devuelve 201 con el total del pedido y el stock del producto baja en 1.
+5. `docker run --rm -e TIENDA_NOMBRE="Prueba" -p 8000:8000 tienda-online:1.0.0` → `GET /` devuelve `"tienda": "Prueba"`.
+6. `docker run --rm tienda-online:1.0.0 whoami` devuelve `appuser`: el contenedor no se ejecuta como root.
+7. `docker ps` muestra el contenedor como `healthy` (el `HEALTHCHECK` consulta `GET /` cada 30 s).
 
 ### Publicar la imagen en Docker Hub (push)
 
@@ -133,7 +138,7 @@ docker push pedroescarda/tienda-online:latest
 
 ```bash
 docker pull pedroescarda/tienda-online:1.0.0
-docker run --rm pedroescarda/tienda-online:1.0.0
+docker run --rm -p 8000:8000 pedroescarda/tienda-online:1.0.0
 ```
 
 ## Flujo de trabajo con Git
