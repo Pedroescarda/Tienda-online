@@ -27,5 +27,12 @@ RUN chown -R appuser:appuser /app && chmod -R u+rx /app/src
 
 USER appuser
 
-# 6. Comando de inicio
-CMD ["python", "src/main.py"]
+# La API escucha en el puerto 8000
+EXPOSE 8000
+
+# Comprueba periódicamente que la API responde (sin instalar curl en la imagen)
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/')" || exit 1
+
+# 6. Comando de inicio: servidor uvicorn con la app FastAPI de src/main.py
+CMD ["uvicorn", "main:app", "--app-dir", "src", "--host", "0.0.0.0", "--port", "8000"]
