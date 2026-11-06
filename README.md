@@ -5,7 +5,7 @@
 
 ## Descripción
 
-API REST en Python (FastAPI) de una tienda online, desarrollada en la Práctica 2 a partir del modelo orientado a objetos de la Práctica 1.3. Gestiona **productos**, **usuarios** y **pedidos** mediante una capa de servicios (`TiendaService`):
+API REST en Python (FastAPI) de una tienda online desarrollada en la Práctica 2. Gestiona **productos**, **usuarios** y **pedidos** mediante una capa de servicios (`TiendaService`):
 
 - Registrar usuarios (clientes y administradores) y consultarlos.
 - Crear, listar, consultar y eliminar productos (genéricos, electrónica y ropa).
